@@ -1,0 +1,53 @@
+# 应用配置
+spring:
+  application:
+    name: demo-app
+
+  # 数据源配置
+  datasource:
+    url: jdbc:postgresql://localhost:5432/javaDemo
+    username: root
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  # JPA配置
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  # 数据库初始化
+  sql:
+    init:
+      mode: always
+      platform: postgresql
+
+  # 日志配置
+  output:
+    ansi:
+      enabled: ALWAYS
+
+# 服务端口
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# 日志级别
+logging:
+  level:
+    com.example.demo: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
