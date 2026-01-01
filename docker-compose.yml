@@ -1,56 +1,50 @@
-version: '3.8'
-
 services:
+  # PostgreSQL数据库
   postgres:
-    image: postgres:15-alpine
+    image: docker.mirrors.ustc.edu.cn/library/postgres:15-alpine
     container_name: demo-postgres
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: demo_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: javaDemo
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - demo-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U root -d javaDemo"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - demo-network
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: demo-pgadmin
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@demo.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
-    networks:
-      - demo-network
-
+  # 应用服务
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: demo-app
-    restart: always
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/demo
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/javaDemo
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 123456
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: docker
     ports:
       - "8080:8080"
     networks:
       - demo-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   demo-network:
